@@ -24,12 +24,24 @@
       appId: "YOUR_APP_ID"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    window.db = db;
-    window.fbFunctions = { collection, addDoc, getDocs, query, orderBy, limit, onSnapshot, serverTimestamp };
-    window.firebaseReady = true;
-    document.dispatchEvent(new Event('firebaseReady'));
+    try {
+      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.fbFunctions = { collection, addDoc, getDocs, query, orderBy, limit, onSnapshot, serverTimestamp };
+        window.firebaseReady = true;
+        document.dispatchEvent(new Event('firebaseReady'));
+      } else {
+        console.warn('Firebase 설정이 필요합니다. firebaseConfig를 실제 값으로 교체하세요.');
+        window.firebaseReady = false;
+        document.dispatchEvent(new Event('firebaseReady'));
+      }
+    } catch (e) {
+      console.error('Firebase 초기화 실패:', e);
+      window.firebaseReady = false;
+      document.dispatchEvent(new Event('firebaseReady'));
+    }
   </script>
 
   <style>

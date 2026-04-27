@@ -31,6 +31,15 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
+          exclude: |
+            .git/**
+            .github/**
+            .claude/**
+            .idx/**
+            .vscode/**
+            firebase-debug.log
+            firebase.json
+            .firebaserc
 
       - name: Deploy to GitHub Pages
         id: deployment
