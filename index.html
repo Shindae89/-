@@ -1,14 +1,2759 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>총무 업무지원 포탈 | Netmarble</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    // ★★★ Firebase 설정을 여기에 입력하세요 ★★★
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db;
+    window.fbFunctions = { collection, addDoc, getDocs, query, orderBy, limit, onSnapshot, serverTimestamp };
+    window.firebaseReady = true;
+    document.dispatchEvent(new Event('firebaseReady'));
+  </script>
+
+  <style>
+    :root {
+      --nm-red: #E8002D;
+      --nm-dark: #0A0A0F;
+      --nm-surface: #111118;
+      --nm-card: #18181F;
+      --nm-border: rgba(255,255,255,0.07);
+      --nm-border-hover: rgba(232,0,45,0.4);
+      --nm-text: #F0F0F5;
+      --nm-muted: #8888A0;
+      --nm-accent: #FF3358;
+      --nm-blue: #3B82F6;
+      --nm-green: #10B981;
+      --nm-amber: #F59E0B;
+      --nm-purple: #8B5CF6;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--nm-dark);
+      color: var(--nm-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--nm-dark); }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+    /* ─── Layout ─── */
+    .app { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 240px;
+      background: var(--nm-surface);
+      border-right: 1px solid var(--nm-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .logo-area {
+      padding: 28px 24px 24px;
+      border-bottom: 1px solid var(--nm-border);
+    }
+
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--nm-red);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: white;
+    }
+
+    .logo-text {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--nm-text);
+      letter-spacing: -0.3px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--nm-muted);
+      margin-left: 42px;
+    }
+
+    .nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+
+    .nav-section { margin-bottom: 24px; }
+
+    .nav-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--nm-muted);
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--nm-muted);
+      font-size: 13.5px;
+      font-weight: 500;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--nm-text); }
+
+    .nav-item.active {
+      background: rgba(232,0,45,0.12);
+      color: var(--nm-accent);
+      border: 1px solid rgba(232,0,45,0.2);
+    }
+
+    .nav-item .icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .nav-item.active .icon { background: rgba(232,0,45,0.2); }
+    .nav-item:not(.active) .icon { background: rgba(255,255,255,0.04); }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--nm-border);
+    }
+
+    .firebase-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(255,160,0,0.08);
+      border: 1px solid rgba(255,160,0,0.2);
+      border-radius: 8px;
+      font-size: 11px;
+      color: #FFA000;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--nm-green);
+      box-shadow: 0 0 6px var(--nm-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ─── Main Content ─── */
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--nm-border);
+      background: rgba(10,10,15,0.8);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--nm-muted);
+    }
+
+    .breadcrumb .current { color: var(--nm-text); font-weight: 500; }
+
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    .topbar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--nm-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--nm-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+
+    .topbar-btn:hover { border-color: var(--nm-border-hover); color: var(--nm-text); }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--nm-red), #FF6B35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* ─── Pages ─── */
+    .page { display: none; padding: 32px; animation: fadeUp 0.35s ease; }
+    .page.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Dashboard ─── */
+    .page-header { margin-bottom: 32px; }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .page-subtitle { font-size: 14px; color: var(--nm-muted); }
+
+    /* ─── Stats Grid ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+
+    .stat-card.red::before { background: var(--nm-red); }
+    .stat-card.blue::before { background: var(--nm-blue); }
+    .stat-card.green::before { background: var(--nm-green); }
+    .stat-card.amber::before { background: var(--nm-amber); }
+
+    .stat-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-2px); }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--nm-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .stat-card.red .stat-value { color: #FF4560; }
+    .stat-card.blue .stat-value { color: var(--nm-blue); }
+    .stat-card.green .stat-value { color: var(--nm-green); }
+    .stat-card.amber .stat-value { color: var(--nm-amber); }
+
+    .stat-unit {
+      font-size: 13px;
+      color: var(--nm-muted);
+      margin-top: 4px;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    /* ─── Services Grid ─── */
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--nm-border);
+      margin-left: 8px;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .service-card {
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-card::after {
+      content: '\f054';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--nm-border);
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .service-card:hover {
+      border-color: var(--nm-border-hover);
+      background: rgba(24,24,31,0.8);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(232,0,45,0.1);
+    }
+
+    .service-card:hover::after { color: var(--nm-accent); right: 16px; }
+
+    .service-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .service-info .service-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .service-info .service-desc {
+      font-size: 12px;
+      color: var(--nm-muted);
+    }
+
+    /* ─── Activity Feed ─── */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--nm-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title { font-size: 13px; font-weight: 700; }
+
+    .panel-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    .panel-badge.live {
+      background: rgba(16,185,129,0.15);
+      color: var(--nm-green);
+      border: 1px solid rgba(16,185,129,0.25);
+    }
+
+    .panel-body { padding: 16px 20px; }
+
+    .feed-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--nm-border);
+    }
+
+    .feed-item:last-child { border-bottom: none; }
+
+    .feed-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .feed-content { flex: 1; }
+    .feed-title { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+    .feed-meta { font-size: 11px; color: var(--nm-muted); }
+
+    .feed-time {
+      font-size: 11px;
+      color: var(--nm-muted);
+      font-family: 'Space Mono', monospace;
+      flex-shrink: 0;
+    }
+
+    /* ─── Form Pages ─── */
+    .form-page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--nm-muted);
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .back-btn:hover { border-color: var(--nm-border-hover); color: var(--nm-text); }
+
+    .form-container {
+      max-width: 720px;
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 20px;
+      padding: 32px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-row.full { grid-template-columns: 1fr; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--nm-muted);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--nm-border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: var(--nm-text);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--nm-accent);
+      background: rgba(232,0,45,0.04);
+    }
+
+    .form-select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%238888A0' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    .form-select option { background: var(--nm-card); }
+
+    .form-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+
+    .submit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: var(--nm-red);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .submit-btn:hover { background: #ff1a3f; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(232,0,45,0.3); }
+    .submit-btn:disabled { background: #444; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .form-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 24px;
+      border-top: 1px solid var(--nm-border);
+      margin-top: 24px;
+    }
+
+    /* ─── Temperature ─── */
+    .temp-choice {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .temp-btn {
+      padding: 28px;
+      border-radius: 16px;
+      background: var(--nm-card);
+      border: 2px solid var(--nm-border);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.25s;
+    }
+
+    .temp-btn:hover { transform: translateY(-3px); }
+
+    .temp-btn.hot.selected {
+      border-color: #FF4560;
+      background: rgba(255,69,96,0.1);
+    }
+
+    .temp-btn.cold.selected {
+      border-color: #3B82F6;
+      background: rgba(59,130,246,0.1);
+    }
+
+    .temp-btn .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+    .temp-btn .label { font-size: 18px; font-weight: 800; }
+    .temp-btn.hot .label { color: #FF4560; }
+    .temp-btn.cold .label { color: #3B82F6; }
+
+    /* ─── Lost & Found ─── */
+    .lf-choice {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .lf-btn {
+      padding: 24px;
+      border-radius: 16px;
+      background: var(--nm-card);
+      border: 2px solid var(--nm-border);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.25s;
+    }
+
+    .lf-btn.selected { border-color: var(--nm-purple); background: rgba(139,92,246,0.08); }
+    .lf-btn:hover { transform: translateY(-2px); }
+    .lf-btn .emoji { font-size: 40px; display: block; margin-bottom: 8px; }
+    .lf-btn .label { font-size: 15px; font-weight: 700; color: var(--nm-purple); }
+
+    /* ─── Parcel Table ─── */
+    .parcel-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .filter-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--nm-border);
+      background: transparent;
+      color: var(--nm-muted);
+      transition: all 0.2s;
+    }
+
+    .filter-chip.active {
+      background: rgba(245,158,11,0.15);
+      border-color: var(--nm-amber);
+      color: var(--nm-amber);
+    }
+
+    .parcel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .parcel-card {
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 14px;
+      padding: 18px;
+      transition: all 0.2s;
+    }
+
+    .parcel-card:hover { border-color: rgba(245,158,11,0.3); }
+
+    .parcel-date {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--nm-amber);
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.2);
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .parcel-courier { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+
+    .parcel-person {
+      font-size: 13px;
+      color: var(--nm-muted);
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      background: #1E1E28;
+      border: 1px solid var(--nm-border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 280px;
+      z-index: 9999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    .toast-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .toast.success .toast-icon { background: rgba(16,185,129,0.15); color: var(--nm-green); }
+    .toast.error .toast-icon { background: rgba(232,0,45,0.15); color: var(--nm-red); }
+
+    .toast-title { font-size: 14px; font-weight: 700; }
+    .toast-msg { font-size: 12px; color: var(--nm-muted); }
+
+    /* ─── Marquee ─── */
+    .marquee-wrap {
+      background: var(--nm-surface);
+      border: 1px solid var(--nm-border);
+      border-radius: 12px;
+      padding: 12px 20px;
+      overflow: hidden;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .marquee-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--nm-amber);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .marquee-track { overflow: hidden; flex: 1; }
+
+    .marquee-inner {
+      display: inline-flex;
+      gap: 40px;
+      white-space: nowrap;
+      animation: marquee 30s linear infinite;
+    }
+
+    .marquee-inner:hover { animation-play-state: paused; }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .marquee-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--nm-text);
+    }
+
+    .marquee-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .marquee-badge.hot { background: rgba(255,69,96,0.15); color: #FF4560; border: 1px solid rgba(255,69,96,0.25); }
+    .marquee-badge.cold { background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.25); }
+    .marquee-badge.lost { background: rgba(139,92,246,0.15); color: #A78BFA; border: 1px solid rgba(139,92,246,0.25); }
+
+    /* ─── Firebase Status ─── */
+    .firebase-panel {
+      background: var(--nm-card);
+      border: 1px solid rgba(255,160,0,0.15);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .firebase-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .firebase-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFA000;
+    }
+
+    .firebase-title i { font-size: 15px; }
+
+    .firebase-info {
+      font-size: 12px;
+      color: var(--nm-muted);
+      line-height: 1.6;
+    }
+
+    .firebase-setup-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .firebase-setup-list li {
+      font-size: 12px;
+      color: var(--nm-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-num {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255,160,0,0.15);
+      color: #FFA000;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ─── Admin Page ─── */
+    .admin-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .admin-filter-select {
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: var(--nm-text);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .admin-filter-select:focus { border-color: var(--nm-accent); }
+
+    .admin-search {
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 10px;
+      padding: 8px 14px 8px 36px;
+      color: var(--nm-text);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+      outline: none;
+      width: 220px;
+      transition: all 0.2s;
+    }
+
+    .admin-search:focus { border-color: var(--nm-accent); }
+
+    .search-wrap { position: relative; }
+    .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--nm-muted); font-size: 12px; }
+
+    .admin-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .admin-btn.primary { background: var(--nm-green); color: white; }
+    .admin-btn.primary:hover { background: #0ea271; transform: translateY(-1px); }
+    .admin-btn.secondary { background: var(--nm-card); color: var(--nm-text); border: 1px solid var(--nm-border); }
+    .admin-btn.secondary:hover { border-color: rgba(255,255,255,0.2); }
+    .admin-btn.danger { background: rgba(232,0,45,0.12); color: var(--nm-accent); border: 1px solid rgba(232,0,45,0.25); }
+    .admin-btn.danger:hover { background: rgba(232,0,45,0.2); }
+    .admin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .admin-stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .admin-stat {
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .admin-stat-val {
+      font-size: 24px;
+      font-weight: 900;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 4px;
+    }
+
+    .admin-stat-label { font-size: 11px; color: var(--nm-muted); font-weight: 600; }
+
+    .data-table-wrap {
+      background: var(--nm-card);
+      border: 1px solid var(--nm-border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table thead th {
+      padding: 13px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--nm-muted);
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--nm-border);
+      white-space: nowrap;
+    }
+
+    .data-table thead th.sortable { cursor: pointer; user-select: none; }
+    .data-table thead th.sortable:hover { color: var(--nm-text); }
+
+    .data-table tbody tr {
+      border-bottom: 1px solid var(--nm-border);
+      transition: background 0.15s;
+    }
+
+    .data-table tbody tr:last-child { border-bottom: none; }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+    .data-table td {
+      padding: 12px 16px;
+      color: var(--nm-text);
+      vertical-align: middle;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .cat-temperature { background: rgba(255,69,96,0.15); color: #FF4560; border: 1px solid rgba(255,69,96,0.25); }
+    .cat-lostfound   { background: rgba(139,92,246,0.15); color: #A78BFA; border: 1px solid rgba(139,92,246,0.25); }
+    .cat-equipment   { background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.25); }
+    .cat-facility    { background: rgba(16,185,129,0.15); color: #34D399; border: 1px solid rgba(16,185,129,0.25); }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .status-접수완료 { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.25); }
+    .status-처리중   { background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.25); }
+    .status-완료     { background: rgba(16,185,129,0.15); color: #34D399; border: 1px solid rgba(16,185,129,0.25); }
+
+    .status-select {
+      background: transparent;
+      border: 1px solid var(--nm-border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      color: var(--nm-text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .status-select:hover { border-color: rgba(255,255,255,0.2); }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid var(--nm-border);
+      font-size: 12px;
+      color: var(--nm-muted);
+    }
+
+    .page-btns { display: flex; gap: 4px; }
+
+    .page-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid var(--nm-border);
+      color: var(--nm-muted);
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--nm-text); }
+    .page-btn.active { background: var(--nm-red); border-color: var(--nm-red); color: white; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1200px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .services-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .services-grid { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
+      .parcel-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--nm-muted);
+    }
+
+    .empty-state i { font-size: 36px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 13px; }
+
+    /* ─── Loader ─── */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%);
+      background-size: 400% 100%;
+      animation: skeleton 1.5s ease-in-out infinite;
+      border-radius: 6px;
+    }
+
+    @keyframes skeleton {
+      0% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ─── Google Apps Script link ─── */
+    .gas-link-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.15);
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .gas-link-banner i { color: var(--nm-blue); font-size: 16px; flex-shrink: 0; }
+
+    .gas-link-banner span { font-size: 13px; color: var(--nm-muted); flex: 1; }
+
+    .gas-link-banner a {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--nm-blue);
+      text-decoration: none;
+      padding: 6px 14px;
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 8px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .gas-link-banner a:hover { background: rgba(59,130,246,0.1); }
+  </style>
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+
+<div class="app">
+
+  <!-- ─── Sidebar ─── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="logo-area">
+      <div class="logo-mark">
+        <div class="logo-icon"><i class="fa-solid fa-building"></i></div>
+        <div class="logo-text">넷마블 총무포탈</div>
+      </div>
+      <div class="logo-sub">General Affairs Portal</div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-section">
+        <div class="nav-label">메인</div>
+        <div class="nav-item active" data-page="dashboard">
+          <div class="icon"><i class="fa-solid fa-chart-pie"></i></div>
+          대시보드
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">빠른 서비스</div>
+        <div class="nav-item" data-page="temperature">
+          <div class="icon"><i class="fa-solid fa-temperature-half"></i></div>
+          온도 민원
+        </div>
+        <div class="nav-item" data-page="lostfound">
+          <div class="icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+          분실물 센터
+        </div>
+        <div class="nav-item" data-page="parcel">
+          <div class="icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+          미수령 택배
+        </div>
+        <div class="nav-item" data-page="facility">
+          <div class="icon"><i class="fa-solid fa-wrench"></i></div>
+          시설물·불편건의
+        </div>
+        <div class="nav-item" data-page="equipment">
+          <div class="icon"><i class="fa-solid fa-laptop"></i></div>
+          장비 요청
+        </div>
+        <div class="nav-item" data-page="welfare">
+          <div class="icon"><i class="fa-solid fa-gift"></i></div>
+          경조사 신청
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">관리자</div>
+        <div class="nav-item" data-page="admin">
+          <div class="icon"><i class="fa-solid fa-table-list"></i></div>
+          데이터 관리
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="firebase-badge">
+        <div class="status-dot" id="fbDot"></div>
+        <i class="fa-solid fa-database" style="font-size:11px;"></i>
+        <span id="fbStatus">Firebase 연결 대기중</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── Main ─── -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-btn" id="menuToggle" onclick="toggleSidebar()">
+          <i class="fa-solid fa-bars"></i>
+        </div>
+        <div class="breadcrumb">
+          <span>포탈</span>
+          <i class="fa-solid fa-chevron-right" style="font-size:9px;"></i>
+          <span class="current" id="breadcrumb-current">대시보드</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-btn" title="새로고침" onclick="refreshDashboard()">
+          <i class="fa-solid fa-rotate-right"></i>
+        </div>
+        <div class="avatar">총</div>
+      </div>
+    </div>
+
+    <!-- ═══════ DASHBOARD ═══════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">총무 업무지원 포탈입니다 👋</div>
+        <div class="page-subtitle">불편한 사항은 언제든 문의해주세요. Google Apps Script + Firebase 연동</div>
+      </div>
+
+      <!-- Firebase Setup Guide -->
+      <div class="firebase-panel" id="firebaseSetupGuide">
+        <div class="firebase-header">
+          <div class="firebase-title">
+            <i class="fa-solid fa-fire" style="color:#FFA000;"></i>
+            Firebase 설정 안내
+          </div>
+          <button onclick="document.getElementById('firebaseSetupGuide').style.display='none'"
+                  style="background:none;border:none;color:var(--nm-muted);cursor:pointer;font-size:16px;">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="firebase-info" style="margin-bottom:12px;">
+          현재 Firebase 설정이 필요합니다. 아래 단계를 따라 연결하세요:
+        </div>
+        <ul class="firebase-setup-list">
+          <li><span class="step-num">1</span> <a href="https://console.firebase.google.com" target="_blank" style="color:#60A5FA;">Firebase Console</a>에서 새 프로젝트 생성</li>
+          <li><span class="step-num">2</span> Firestore Database 활성화 (테스트 모드로 시작)</li>
+          <li><span class="step-num">3</span> 프로젝트 설정 &gt; 웹앱 추가 &gt; Config 복사</li>
+          <li><span class="step-num">4</span> HTML 상단의 <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:4px;font-size:11px;">firebaseConfig</code> 객체에 붙여넣기</li>
+        </ul>
+      </div>
+
+      <!-- GAS Link -->
+      <div class="gas-link-banner">
+        <i class="fa-solid fa-link"></i>
+        <span>Google Apps Script 포탈과 연동되어 있습니다. 원본 앱에서 데이터를 확인하세요.</span>
+        <a href="https://script.google.com/a/macros/netmarble.com/s/AKfycbw_vV-a8NqwoSZDv4bIAktrlC2ES6oJB4rzBp9NQqAFUC42aJ8mnxWeUnZXoubGdk7E/exec" target="_blank">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> 원본 포탈 열기
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card red">
+          <div class="stat-label"><i class="fa-solid fa-clipboard-list"></i> 업무 접수</div>
+          <div class="stat-value" id="statReceived">—</div>
+          <div class="stat-unit">건 접수중</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label"><i class="fa-solid fa-check-double"></i> 처리 완료</div>
+          <div class="stat-value" id="statCompleted">—</div>
+          <div class="stat-unit">건 완료</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label"><i class="fa-solid fa-box"></i> 미수령 택배</div>
+          <div class="stat-value" id="statParcel">—</div>
+          <div class="stat-unit">건 보관중</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label"><i class="fa-solid fa-cloud-sun"></i> 구로3동 날씨</div>
+          <div class="stat-value" id="statWeather">—</div>
+          <div class="stat-unit" id="statWeatherDesc">°C</div>
+        </div>
+      </div>
+
+      <!-- Marquee -->
+      <div class="marquee-wrap" id="marqueeWrap">
+        <div class="marquee-label">
+          <i class="fa-solid fa-bullhorn"></i>
+          실시간
+        </div>
+        <div class="marquee-track">
+          <div class="marquee-inner" id="marqueeInner">
+            <span class="marquee-item" style="color:var(--nm-muted);">접수된 민원이 없습니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Services -->
+      <div class="section-title">빠른 서비스</div>
+      <div class="services-grid">
+        <div class="service-card" onclick="goTo('temperature')">
+          <div class="service-icon" style="background:rgba(255,69,96,0.12);color:#FF4560;">
+            <i class="fa-solid fa-temperature-half"></i>
+          </div>
+          <div class="service-info">
+            <div class="service-title">온도 민원</div>
+            <div class="service-desc">사무실 온도 불편 신고</div>
+          </div>
+        </div>
+        <div class="service-card" onclick="goTo('lostfound')">
+          <div class="service-icon" style="background:rgba(139,92,246,0.12);color:#A78BFA;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <div class="service-info">
+            <div class="service-title">분실물 센터</div>
+            <div class="service-desc">분실물 조회 및 신고</div>
+          </div>
+        </div>
+        <div class="service-card" onclick="goTo('parcel')">
+          <div class="service-icon" style="background:rgba(245,158,11,0.12);color:#FCD34D;">
+            <i class="fa-solid fa-boxes-stacked"></i>
+          </div>
+          <div class="service-info">
+            <div class="service-title">미수령 택배</div>
+            <div class="service-desc">내 택배 보관 상태 확인</div>
+          </div>
+        </div>
+        <div class="service-card" onclick="goTo('facility')">
+          <div class="service-icon" style="background:rgba(16,185,129,0.12);color:#34D399;">
+            <i class="fa-solid fa-wrench"></i>
+          </div>
+          <div class="service-info">
+            <div class="service-title">시설물·불편사항 건의</div>
+            <div class="service-desc">시설 수리 및 불편 접수</div>
+          </div>
+        </div>
+        <div class="service-card" onclick="goTo('equipment')">
+          <div class="service-icon" style="background:rgba(59,130,246,0.12);color:#60A5FA;">
+            <i class="fa-solid fa-laptop"></i>
+          </div>
+          <div class="service-info">
+            <div class="service-title">장비 요청</div>
+            <div class="service-desc">장비 점검 및 지원 요청</div>
+          </div>
+        </div>
+        <div class="service-card" onclick="goTo('welfare')">
+          <div class="service-icon" style="background:rgba(236,72,153,0.12);color:#F472B6;">
+            <i class="fa-solid fa-gift"></i>
+          </div>
+          <div class="service-info">
+            <div class="service-title">경조사 신청</div>
+            <div class="service-desc">사내 경조사 지원 신청</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Grid -->
+      <div class="bottom-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">최근 접수 현황</div>
+            <div class="panel-badge live">● LIVE</div>
+          </div>
+          <div class="panel-body" id="recentFeed">
+            <div class="empty-state">
+              <i class="fa-solid fa-inbox" style="display:block;"></i>
+              <p>아직 접수된 내역이 없습니다</p>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">카테고리별 현황</div>
+            <div class="panel-badge" style="background:rgba(59,130,246,0.12);color:#60A5FA;border:1px solid rgba(59,130,246,0.2);">이번 달</div>
+          </div>
+          <div class="panel-body" id="categoryStats">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="category-bar" data-key="temperature" data-label="온도 민원" data-color="#FF4560"></div>
+              <div class="category-bar" data-key="lostfound" data-label="분실물" data-color="#A78BFA"></div>
+              <div class="category-bar" data-key="equipment" data-label="장비 요청" data-color="#60A5FA"></div>
+              <div class="category-bar" data-key="facility" data-label="시설물 건의" data-color="#34D399"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ TEMPERATURE ═══════ -->
+    <div class="page" id="page-temperature">
+      <div class="form-page-header">
+        <div class="back-btn" onclick="goTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></div>
+        <div>
+          <div class="page-title" style="font-size:22px;">🌡️ 온도 민원</div>
+          <div class="page-subtitle">사무실이 너무 덥거나 춥다면 알려주세요.</div>
+        </div>
+      </div>
+
+      <!-- 덥다/춥다 선택 -->
+      <div class="temp-choice" style="max-width:720px;">
+        <div class="temp-btn hot" id="btnHot" onclick="selectTemp('hot')">
+          <span class="emoji">🥵</span>
+          <div class="label">덥다</div>
+        </div>
+        <div class="temp-btn cold" id="btnCold" onclick="selectTemp('cold')">
+          <span class="emoji">🥶</span>
+          <div class="label">춥다</div>
+        </div>
+      </div>
+
+      <!-- 위치 선택 패널 -->
+      <div class="form-container" style="max-width:860px;margin-top:20px;">
+        <div style="font-size:14px;font-weight:700;color:var(--nm-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">
+          근무 위치 및 구역 선택
+        </div>
+
+        <!-- 1단계: 층수 그룹 -->
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:700;color:var(--nm-muted);margin-bottom:10px;">1. 층수 그룹 선택</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;" id="floorGroupBtns"></div>
+        </div>
+
+        <!-- 2단계: 상세 층수 -->
+        <div id="specificFloorWrap" style="display:none;margin-bottom:16px;padding:14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:12px;">
+          <div style="font-size:11px;font-weight:700;color:#60A5FA;margin-bottom:10px;">2. 상세 층수 선택</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;" id="specificFloorBtns"></div>
+        </div>
+
+        <!-- 3단계: 도면 -->
+        <div style="position:relative;width:100%;background:rgba(255,255,255,0.02);border:1px solid var(--nm-border);border-radius:14px;overflow:hidden;margin-bottom:16px;min-height:180px;" id="floorMapWrap">
+          <img id="floorMapImg" src="" alt="층별 도면" style="width:100%;height:auto;display:block;pointer-events:none;opacity:0;transition:opacity 0.3s;">
+          <div id="floorMapZones" style="position:absolute;inset:0;"></div>
+          <div id="floorMapPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--nm-muted);font-size:13px;">
+            <div style="text-align:center;"><i class="fa-solid fa-map" style="font-size:28px;margin-bottom:8px;display:block;opacity:0.3;"></i>층수를 선택하면 도면이 표시됩니다</div>
+          </div>
+        </div>
+
+        <!-- 구역 버튼 그룹 -->
+        <div id="zoneBtnGroups" style="display:none;margin-bottom:20px;">
+          <div style="font-size:11px;font-weight:700;color:var(--nm-muted);margin-bottom:10px;">3. 구역 버튼으로도 선택 가능</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;" id="zoneGroupsGrid"></div>
+        </div>
+
+        <!-- 선택된 구역 표시 -->
+        <div id="selectedZoneDisplay" style="display:none;padding:12px 16px;background:rgba(232,0,45,0.08);border:1px solid rgba(232,0,45,0.2);border-radius:10px;margin-bottom:16px;font-size:13px;font-weight:600;color:var(--nm-accent);">
+          <i class="fa-solid fa-location-dot"></i> 선택 위치: <span id="selectedZoneText"></span>
+        </div>
+
+        <!-- 신청자 이름 -->
+        <div class="form-row" style="margin-bottom:16px;">
+          <div class="form-group">
+            <label class="form-label">신청자 이름</label>
+            <input class="form-input" id="tempName" type="text" placeholder="홍길동">
+          </div>
+          <div class="form-group">
+            <label class="form-label">메모 (자동 작성됨)</label>
+            <input class="form-input" id="tempMemoShort" type="text" placeholder="구역 선택 시 자동 입력" readonly style="background:rgba(255,255,255,0.02);color:var(--nm-muted);">
+          </div>
+        </div>
+
+        <!-- 추가 메모 -->
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">추가 메모 (선택)</label>
+          <textarea class="form-textarea" id="tempMemo" placeholder="추가로 전달할 내용이 있으면 입력해주세요." style="min-height:90px;"></textarea>
+        </div>
+
+        <div class="form-footer">
+          <button class="submit-btn" onclick="submitTemperature()" id="btnTempSubmit">
+            <i class="fa-solid fa-paper-plane"></i> 민원 접수
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ LOST & FOUND ═══════ -->
+    <div class="page" id="page-lostfound">
+      <div class="form-page-header">
+        <div class="back-btn" onclick="goTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></div>
+        <div>
+          <div class="page-title" style="font-size:22px;">🔍 분실물 센터</div>
+          <div class="page-subtitle">잃어버린 물건을 찾거나, 주운 물건을 신고해주세요</div>
+        </div>
+      </div>
+
+      <div class="form-container">
+        <div class="lf-choice">
+          <div class="lf-btn" id="btnLost" onclick="selectLF('lost')">
+            <span class="emoji">😥</span>
+            <div class="label">분실 (찾아주세요)</div>
+          </div>
+          <div class="lf-btn" id="btnFound" onclick="selectLF('found')">
+            <span class="emoji">🙋</span>
+            <div class="label">습득 (주웠어요)</div>
+          </div>
+        </div>
+        <input type="hidden" id="lfType" value="">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">발생 위치 (층)</label>
+            <select class="form-select" id="lfFloor">
+              <option value="">층수를 선택하세요</option>
+              <option>4층</option><option>10층</option><option>14층</option>
+              <option>22층</option><option>23층</option><option>24층</option>
+              <option>25층</option><option>26층</option><option>27층</option>
+              <option>28층~31층</option><option>32층</option><option>33층</option>
+              <option>38층~40층</option><option>로비</option><option>지하</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">물품 종류</label>
+            <input class="form-input" id="lfItem" type="text" placeholder="예: 지갑, 키, 에어팟">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label">상세 내용</label>
+            <textarea class="form-textarea" id="lfMemo" placeholder="특징, 발견 시간, 보관 위치 등을 상세히 적어주세요. &#10;문의: 총무팀 신대형님"></textarea>
+          </div>
+        </div>
+        <div class="form-footer">
+          <button class="submit-btn" style="background:var(--nm-purple);" onclick="submitLostFound()" id="btnLFSubmit">
+            <i class="fa-solid fa-paper-plane"></i> 신고 접수
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ PARCEL ═══════ -->
+    <div class="page" id="page-parcel">
+      <div class="form-page-header">
+        <div class="back-btn" onclick="goTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></div>
+        <div>
+          <div class="page-title" style="font-size:22px;">📦 미수령 택배 조회</div>
+          <div class="page-subtitle">회사로 배송된 미수령 택배를 확인하세요 · 문의: 문서수발실 최원혁님</div>
+        </div>
+      </div>
+
+      <div class="parcel-filters" id="parcelFilters">
+        <button class="filter-chip active" onclick="filterParcel('전체', this)">전체</button>
+      </div>
+
+      <div class="parcel-grid" id="parcelGrid">
+        <div class="empty-state" style="grid-column:1/-1;">
+          <i class="fa-solid fa-box-open" style="display:block;"></i>
+          <p>Firebase에서 데이터를 불러오는 중...</p>
+          <p style="font-size:11px;margin-top:6px;">또는 Google Apps Script 원본 포탈에서 확인하세요</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ FACILITY ═══════ -->
+    <div class="page" id="page-facility">
+      <div class="form-page-header">
+        <div class="back-btn" onclick="goTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></div>
+        <div>
+          <div class="page-title" style="font-size:22px;">🔧 시설물·불편사항 건의</div>
+          <div class="page-subtitle">시설물 수리 및 기타 불편사항 통합 접수</div>
+        </div>
+      </div>
+
+      <div class="form-container">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">문의 종류</label>
+            <select class="form-select" id="facilityType">
+              <option>시설물 (조명·사무집기 등)</option>
+              <option>냉난방 설비</option>
+              <option>화장실/위생</option>
+              <option>엘리베이터</option>
+              <option>주차/차량</option>
+              <option>기타 불편사항</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">신청자 이름</label>
+            <input class="form-input" id="facilityName" type="text" placeholder="홍길동">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">발생 위치</label>
+            <input class="form-input" id="facilityLocation" type="text" placeholder="예: 38층 회의실 A">
+          </div>
+          <div class="form-group">
+            <label class="form-label">완료 요청일</label>
+            <input class="form-input" id="facilityDue" type="date">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label">문의 요약</label>
+            <input class="form-input" id="facilitySummary" type="text" placeholder="문의하실 사항을 간략히 기술">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label">상세 내용</label>
+            <textarea class="form-textarea" id="facilityDetail" placeholder="위치(층, 구역) 및 문의하실 사항을 상세히 기술해주세요."></textarea>
+          </div>
+        </div>
+        <div class="form-footer">
+          <button class="submit-btn" style="background:var(--nm-green);" onclick="submitFacility()" id="btnFacilitySubmit">
+            <i class="fa-solid fa-paper-plane"></i> 등록하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ EQUIPMENT ═══════ -->
+    <div class="page" id="page-equipment">
+      <div class="form-page-header">
+        <div class="back-btn" onclick="goTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></div>
+        <div>
+          <div class="page-title" style="font-size:22px;">💻 전산장비 지원</div>
+          <div class="page-subtitle">장비 신청 및 수리 요청</div>
+        </div>
+      </div>
+
+      <div class="form-container">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">문의 종류</label>
+            <select class="form-select" id="equipType">
+              <option>IT지원서비스 요청</option>
+              <option>장비 수리/점검</option>
+              <option>신규 장비 신청</option>
+              <option>소프트웨어 요청</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">신청자 이름</label>
+            <input class="form-input" id="equipName" type="text" placeholder="홍길동">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">장비 종류</label>
+            <select class="form-select" id="equipDevice">
+              <option>PC/노트북</option>
+              <option>모니터</option>
+              <option>주변기기 (마우스/키보드)</option>
+              <option>전화기</option>
+              <option>프린터</option>
+              <option>기타</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">완료 요청일</label>
+            <input class="form-input" id="equipDue" type="date">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label">문의 요약</label>
+            <input class="form-input" id="equipSummary" type="text" placeholder="문의하실 사항을 간략히 기술">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label">상세 내용</label>
+            <textarea class="form-textarea" id="equipDetail" placeholder="장비명, 증상, 사용 용도 등을 상세히 기술해주세요."></textarea>
+          </div>
+        </div>
+        <div class="form-footer">
+          <button class="submit-btn" onclick="submitEquipment()" id="btnEquipSubmit">
+            <i class="fa-solid fa-paper-plane"></i> 등록하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ WELFARE ═══════ -->
+    <div class="page" id="page-welfare">
+      <div class="form-page-header">
+        <div class="back-btn" onclick="goTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></div>
+        <div>
+          <div class="page-title" style="font-size:22px;">🎁 경조사 신청</div>
+          <div class="page-subtitle">사내 경조사 지원 신청</div>
+        </div>
+      </div>
+
+      <div class="form-container" style="text-align:center;padding:48px;">
+        <div style="font-size:64px;margin-bottom:24px;">🎁</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px;">외부 시스템 연동</div>
+        <div style="font-size:14px;color:var(--nm-muted);margin-bottom:28px;">경조사 신청은 CRM 시스템을 통해 진행됩니다.</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--nm-border);border-radius:12px;padding:16px;margin-bottom:28px;text-align:left;">
+          <div style="font-size:12px;color:var(--nm-muted);margin-bottom:4px;">접속 정보</div>
+          <div style="font-size:14px;font-weight:600;">A1321 / netmarble1!</div>
+        </div>
+        <a href="https://crm.ehyunjin.com:8081/" target="_blank"
+           style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:linear-gradient(135deg,#EC4899,#8B5CF6);color:white;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          CRM 시스템 바로가기
+        </a>
+      </div>
+    </div>
+
+    <!-- ═══════ ADMIN ═══════ -->
+    <div class="page" id="page-admin">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div class="page-title">📋 데이터 관리</div>
+            <div class="page-subtitle">Firebase Firestore에 저장된 전체 접수 내역</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="admin-btn secondary" onclick="loadAdminData()">
+              <i class="fa-solid fa-rotate-right"></i> 새로고침
+            </button>
+            <button class="admin-btn primary" onclick="exportExcel()" id="btnExportExcel">
+              <i class="fa-solid fa-file-excel"></i> Excel 다운로드
+            </button>
+            <button class="admin-btn secondary" onclick="exportCSV()">
+              <i class="fa-solid fa-file-csv"></i> CSV 다운로드
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 요약 통계 -->
+      <div class="admin-stats-row" id="adminStatsRow">
+        <div class="admin-stat">
+          <div class="admin-stat-val" id="aStatAll" style="color:var(--nm-text);">—</div>
+          <div class="admin-stat-label">전체</div>
+        </div>
+        <div class="admin-stat">
+          <div class="admin-stat-val" id="aStatTemp" style="color:#FF4560;">—</div>
+          <div class="admin-stat-label">온도 민원</div>
+        </div>
+        <div class="admin-stat">
+          <div class="admin-stat-val" id="aStatLF" style="color:#A78BFA;">—</div>
+          <div class="admin-stat-label">분실물</div>
+        </div>
+        <div class="admin-stat">
+          <div class="admin-stat-val" id="aStatEquip" style="color:#60A5FA;">—</div>
+          <div class="admin-stat-label">장비 요청</div>
+        </div>
+        <div class="admin-stat">
+          <div class="admin-stat-val" id="aStatFacility" style="color:#34D399;">—</div>
+          <div class="admin-stat-label">시설물 건의</div>
+        </div>
+      </div>
+
+      <!-- 툴바 -->
+      <div class="admin-toolbar">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input class="admin-search" id="adminSearch" type="text" placeholder="이름, 내용 검색..." oninput="applyAdminFilter()">
+        </div>
+        <select class="admin-filter-select" id="adminCatFilter" onchange="applyAdminFilter()">
+          <option value="">전체 카테고리</option>
+          <option value="temperature">온도 민원</option>
+          <option value="lostfound">분실물</option>
+          <option value="equipment">장비 요청</option>
+          <option value="facility">시설물 건의</option>
+        </select>
+        <select class="admin-filter-select" id="adminStatusFilter" onchange="applyAdminFilter()">
+          <option value="">전체 상태</option>
+          <option value="접수완료">접수완료</option>
+          <option value="처리중">처리중</option>
+          <option value="완료">완료</option>
+        </select>
+        <select class="admin-filter-select" id="adminDateFilter" onchange="applyAdminFilter()">
+          <option value="">전체 기간</option>
+          <option value="today">오늘</option>
+          <option value="week">최근 7일</option>
+          <option value="month">최근 30일</option>
+        </select>
+        <span style="margin-left:auto;font-size:12px;color:var(--nm-muted);" id="adminResultCount"></span>
+      </div>
+
+      <!-- 테이블 -->
+      <div class="data-table-wrap">
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="adminTable">
+            <thead>
+              <tr>
+                <th class="sortable" onclick="sortAdmin('createdAt')">접수일시 <i class="fa-solid fa-sort" style="font-size:9px;"></i></th>
+                <th class="sortable" onclick="sortAdmin('category')">카테고리 <i class="fa-solid fa-sort" style="font-size:9px;"></i></th>
+                <th>구분</th>
+                <th class="sortable" onclick="sortAdmin('name')">신청자 <i class="fa-solid fa-sort" style="font-size:9px;"></i></th>
+                <th>위치/층수</th>
+                <th>요약/내용</th>
+                <th>상태 변경</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody">
+              <tr>
+                <td colspan="7" style="text-align:center;padding:48px;color:var(--nm-muted);">
+                  <i class="fa-solid fa-spinner fa-spin" style="font-size:20px;display:block;margin-bottom:12px;"></i>
+                  데이터를 불러오는 중...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="adminPagination" style="display:none;">
+          <span id="paginationInfo"></span>
+          <div class="page-btns" id="paginationBtns"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-icon"><i class="fa-solid fa-check" id="toastIcon"></i></div>
+  <div>
+    <div class="toast-title" id="toastTitle">접수 완료</div>
+    <div class="toast-msg" id="toastMsg">Firebase에 저장되었습니다.</div>
+  </div>
+</div>
+
+<script>
+  // ─── State ───
+  let currentPage = 'dashboard';
+  let selectedTempType = '';
+  let selectedLFType = '';
+  let db = null;
+  let fbFunctions = null;
+  let allParcels = [];
+  let statsData = { temperature: 0, lostfound: 0, equipment: 0, facility: 0 };
+
+  // ─── Firebase Ready ───
+  document.addEventListener('firebaseReady', () => {
+    db = window.db;
+    fbFunctions = window.fbFunctions;
+    document.getElementById('fbStatus').textContent = 'Firebase 연결됨';
+    document.getElementById('fbDot').style.background = '#10B981';
+    document.getElementById('fbDot').style.boxShadow = '0 0 6px #10B981';
+    loadDashboardData();
+    subscribeToRecent();
+  });
+
+  // ─── Navigation ───
+  function goTo(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => {
+      n.classList.toggle('active', n.dataset.page === page);
+    });
+    currentPage = page;
+    const labels = {
+      dashboard: '대시보드', temperature: '온도 민원', lostfound: '분실물 센터',
+      parcel: '미수령 택배', facility: '시설물·불편건의', equipment: '장비 요청',
+      welfare: '경조사 신청', admin: '데이터 관리'
+    };
+    document.getElementById('breadcrumb-current').textContent = labels[page] || page;
+
+    if (page === 'parcel') loadParcels();
+    if (page === 'admin') loadAdminData();
+  }
+
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const page = item.dataset.page;
+      if (page) goTo(page);
+    });
+  });
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  // ─── Floor Map Data ───
+  const FLOOR_GROUPS = ['4층','10, 14층','22~23층','24~26층','27층','28~31층','32층','33층','34~40층'];
+  const SPECIFIC_FLOORS = {
+    '4층':['4층'], '10, 14층':['10층','14층'], '22~23층':['22층','23층'],
+    '24~26층':['24층','25층','26층'], '27층':['27층'], '28~31층':['28층','29층','30층','31층'],
+    '32층':['32층'], '33층':['33층'], '34~40층':['34층','35층','36층','37층','38층','39층','40층']
+  };
+  const FLOOR_IMAGES = {
+    '4층': 'https://lh3.googleusercontent.com/d/1t1CIfgUfFETl-m1sG3x4OkF-hK9sUIVj',
+    '10, 14층': 'https://drive.google.com/thumbnail?id=1HDfhpChXgDQDMvLB6hCnDz7b4eciV6zx&sz=w1500',
+    '22~23층': 'https://drive.google.com/thumbnail?id=1bkoFOUn6Imwctyent-DU25UU3vordBz1&sz=w1500',
+    '24~26층': 'https://drive.google.com/thumbnail?id=1UGRiioMsmln5ZCgxwXOrnv_2nHWrgpSo&sz=w1500',
+    '27층': 'https://drive.google.com/thumbnail?id=10JAD_4qa1C3Xv86iVkPCiwTd3WhaT7Uf&sz=w1500',
+    '28~31층': 'https://drive.google.com/thumbnail?id=1uuXBk4WssygTqusyIUr9ZxDe_Vdjhi45&sz=w1500',
+    '32층': 'https://drive.google.com/thumbnail?id=1zcCjrXXd32iMagzmh2jzLKzhfTg49_BY&sz=w1500',
+    '33층': 'https://drive.google.com/thumbnail?id=1KPVInOZtT9bb11N4JoRxpMXV5rQeCdsE&sz=w1500',
+    '34~40층': 'https://drive.google.com/thumbnail?id=1KQZp2wudpdTnQvOjI9HaY66Dv12Uy3wo&sz=w1500'
+  };
+
+  const ZONE_GROUPS = {
+    '4층': [
+      { id:'park', title:'PARK (S구역 내측)', color:'#F97316', items: Array.from({length:6},(_,i)=>`PARK-${i+1}`) },
+      { id:'pf', title:'PF (S구역 창가)', color:'#3B82F6', items: Array.from({length:14},(_,i)=>`PF-${i+1}`) },
+      { id:'art', title:'ART (N구역 내측)', color:'#F59E0B', items: Array.from({length:6},(_,i)=>`ART-${i+1}`) },
+      { id:'af', title:'AF (N구역 창가)', color:'#10B981', items: Array.from({length:15},(_,i)=>`AF-${i+1}`) }
+    ],
+    'default': [
+      { id:'park', title:'PARK (S구역 내측)', color:'#F97316', items: Array.from({length:8},(_,i)=>`PARK-${i+1}`) },
+      { id:'pf', title:'PF (S구역 창가)', color:'#3B82F6', items: Array.from({length:8},(_,i)=>`PF-${i+1}`) },
+      { id:'art', title:'ART (N구역 내측)', color:'#F59E0B', items: Array.from({length:8},(_,i)=>`ART-${i+1}`) },
+      { id:'af', title:'AF (N구역 창가)', color:'#10B981', items: Array.from({length:9},(_,i)=>`AF-${i+1}`) }
+    ],
+    '32층': [
+      { id:'a', title:'A구역', color:'#3B82F6', items:['A1','A2','A3','A4','A5','A6','A7'] },
+      { id:'b', title:'B구역', color:'#F59E0B', items:['B1','B2','B3','B4','B5','B6','B7'] },
+      { id:'sem', title:'세미나/회의실', color:'#10B981', items:['SEMINAR_A','SEMINAR_B','SEMINAR_C','SEMINAR_D','CONFERENCE ROOM'] }
+    ]
+  };
+
+  const ZONE_MAPS = {
+    '4층': [{id:'PARK-1',top:'32.1%',left:'15.5%'},{id:'PARK-2',top:'31.3%',left:'28.2%'},{id:'PARK-3',top:'31.5%',left:'42.4%'},{id:'PARK-4',top:'31.7%',left:'53.0%'},{id:'PARK-5',top:'36.6%',left:'61.7%'},{id:'PARK-6',top:'48.5%',left:'73.3%'},{id:'PF-1',top:'37.5%',left:'5.5%'},{id:'PF-2',top:'25.8%',left:'4.9%'},{id:'PF-3',top:'14.8%',left:'12.3%'},{id:'PF-4',top:'15.5%',left:'22.5%'},{id:'PF-5',top:'14.9%',left:'29.4%'},{id:'PF-6',top:'15.0%',left:'37.4%'},{id:'PF-7',top:'14.8%',left:'44.8%'},{id:'PF-8',top:'15.0%',left:'51.9%'},{id:'PF-9',top:'14.8%',left:'59.4%'},{id:'PF-10',top:'23.2%',left:'62.4%'},{id:'PF-11',top:'23.4%',left:'68.7%'},{id:'PF-12',top:'30.2%',left:'73.4%'},{id:'PF-13',top:'34.6%',left:'81.1%'},{id:'PF-14',top:'41.6%',left:'84.9%'},{id:'ART-1',top:'67.6%',left:'75.9%'},{id:'ART-2',top:'67.8%',left:'62.9%'},{id:'ART-3',top:'67.2%',left:'49.1%'},{id:'ART-4',top:'68.3%',left:'36.9%'},{id:'ART-5',top:'67.1%',left:'25.4%'},{id:'ART-6',top:'62.7%',left:'17.1%'},{id:'AF-1',top:'55.9%',left:'89.7%'},{id:'AF-2',top:'68.2%',left:'87.9%'},{id:'AF-3',top:'82.3%',left:'87.7%'},{id:'AF-4',top:'84.0%',left:'76.9%'},{id:'AF-5',top:'84.0%',left:'68.3%'},{id:'AF-6',top:'84.4%',left:'60.2%'},{id:'AF-7',top:'84.4%',left:'53.9%'},{id:'AF-8',top:'84.0%',left:'46.1%'},{id:'AF-9',top:'84.0%',left:'39.7%'},{id:'AF-10',top:'84.0%',left:'32.3%'},{id:'AF-11',top:'84.0%',left:'25.1%'},{id:'AF-12',top:'81.3%',left:'17.3%'},{id:'AF-13',top:'75.0%',left:'15.4%'},{id:'AF-14',top:'75.2%',left:'7.7%'},{id:'AF-15',top:'65.9%',left:'4.0%'}],
+    '10, 14층': [{id:'PF-1',top:'36.2%',left:'6.3%'},{id:'PF-2',top:'12.0%',left:'6.7%'},{id:'PF-3',top:'12.0%',left:'33.1%'},{id:'PF-4',top:'11.8%',left:'49.9%'},{id:'PF-5',top:'11.8%',left:'65.7%'},{id:'PF-6',top:'12.0%',left:'78.1%'},{id:'PF-7',top:'12.3%',left:'95.6%'},{id:'PF-8',top:'31.1%',left:'95.5%'},{id:'PARK-1',top:'50.6%',left:'15.2%'},{id:'PARK-2',top:'28.8%',left:'15.5%'},{id:'PARK-3',top:'28.7%',left:'26.8%'},{id:'PARK-4',top:'28.5%',left:'38.4%'},{id:'PARK-5',top:'28.7%',left:'50.4%'},{id:'PARK-6',top:'28.3%',left:'61.7%'},{id:'PARK-7',top:'28.5%',left:'73.2%'},{id:'PARK-8',top:'28.5%',left:'84.2%'},{id:'AF-1',top:'68.2%',left:'95.7%'},{id:'AF-2',top:'89.3%',left:'95.6%'},{id:'AF-3',top:'90.8%',left:'73.6%'},{id:'AF-4',top:'90.8%',left:'59.6%'},{id:'AF-5',top:'90.8%',left:'40.9%'},{id:'AF-6',top:'90.8%',left:'23.7%'},{id:'AF-7',top:'91.0%',left:'9.1%'},{id:'AF-8',top:'68.0%',left:'6.7%'},{id:'ART-1',top:'72.9%',left:'85.0%'},{id:'ART-2',top:'72.6%',left:'73.2%'},{id:'ART-3',top:'72.4%',left:'61.7%'},{id:'ART-4',top:'72.6%',left:'50.3%'},{id:'ART-5',top:'72.6%',left:'38.6%'},{id:'ART-6',top:'72.9%',left:'26.9%'},{id:'ART-7',top:'72.8%',left:'17.0%'}],
+    '22~23층': [{id:'PF-1',top:'38.2%',left:'4.4%'},{id:'PF-2',top:'8.6%',left:'4.9%'},{id:'PF-3',top:'8.6%',left:'27.5%'},{id:'PF-4',top:'8.8%',left:'42.5%'},{id:'PF-5',top:'8.8%',left:'56.9%'},{id:'PF-6',top:'8.6%',left:'74.3%'},{id:'PF-7',top:'11.3%',left:'97.4%'},{id:'PF-8',top:'24.6%',left:'97.2%'},{id:'PARK-1',top:'26.3%',left:'13.7%'},{id:'PARK-2',top:'26.5%',left:'25.2%'},{id:'PARK-3',top:'26.5%',left:'37.0%'},{id:'PARK-4',top:'26.3%',left:'49.7%'},{id:'PARK-5',top:'26.3%',left:'61.9%'},{id:'PARK-6',top:'26.3%',left:'74.0%'},{id:'PARK-7',top:'26.3%',left:'86.1%'},{id:'AF-2',top:'71.4%',left:'97.3%'},{id:'AF-3',top:'91.0%',left:'96.3%'},{id:'AF-4',top:'91.0%',left:'74.8%'},{id:'AF-5',top:'91.0%',left:'61.4%'},{id:'AF-6',top:'91.0%',left:'41.1%'},{id:'AF-7',top:'91.0%',left:'26.1%'},{id:'AF-8',top:'91.0%',left:'6.2%'},{id:'AF-9',top:'70.0%',left:'4.6%'},{id:'ART-1',top:'49.6%',left:'89.5%'},{id:'ART-2',top:'72.9%',left:'86.7%'},{id:'ART-3',top:'72.9%',left:'74.3%'},{id:'ART-4',top:'72.8%',left:'61.9%'},{id:'ART-5',top:'72.8%',left:'50.2%'},{id:'ART-6',top:'72.8%',left:'37.8%'},{id:'ART-7',top:'72.8%',left:'25.7%'},{id:'ART-8',top:'72.9%',left:'14.3%'}],
+    '24~26층': [{id:'PF-1',top:'38.2%',left:'4.3%'},{id:'PF-2',top:'8.8%',left:'5.0%'},{id:'PF-3',top:'8.8%',left:'27.5%'},{id:'PF-4',top:'8.6%',left:'42.6%'},{id:'PF-5',top:'8.8%',left:'57.2%'},{id:'PF-6',top:'8.8%',left:'74.4%'},{id:'PF-7',top:'11.3%',left:'95.6%'},{id:'PF-8',top:'23.9%',left:'95.6%'},{id:'PARK-1',top:'26.3%',left:'14.2%'},{id:'PARK-2',top:'26.3%',left:'25.4%'},{id:'PARK-3',top:'26.3%',left:'37.0%'},{id:'PARK-4',top:'26.3%',left:'48.7%'},{id:'PARK-5',top:'26.1%',left:'60.7%'},{id:'PARK-6',top:'26.3%',left:'72.5%'},{id:'PARK-7',top:'26.3%',left:'84.0%'},{id:'AF-2',top:'71.1%',left:'95.7%'},{id:'AF-3',top:'91.3%',left:'94.5%'},{id:'AF-4',top:'91.1%',left:'75.1%'},{id:'AF-5',top:'91.0%',left:'61.4%'},{id:'AF-6',top:'91.1%',left:'41.0%'},{id:'AF-7',top:'91.1%',left:'26.1%'},{id:'AF-8',top:'91.0%',left:'6.2%'},{id:'AF-9',top:'69.9%',left:'4.6%'},{id:'ART-1',top:'49.1%',left:'74.2%'},{id:'ART-2',top:'71.9%',left:'84.4%'},{id:'ART-3',top:'71.7%',left:'73.0%'},{id:'ART-4',top:'71.7%',left:'61.1%'},{id:'ART-5',top:'71.7%',left:'49.7%'},{id:'ART-6',top:'71.9%',left:'37.4%'},{id:'ART-7',top:'71.7%',left:'25.8%'},{id:'ART-8',top:'71.6%',left:'14.3%'}],
+    '27층': [{id:'PF-1',top:'38.2%',left:'4.3%'},{id:'PF-2',top:'8.6%',left:'5.0%'},{id:'PF-3',top:'8.6%',left:'27.3%'},{id:'PF-4',top:'8.8%',left:'42.5%'},{id:'PF-5',top:'8.8%',left:'56.8%'},{id:'PF-6',top:'8.8%',left:'74.5%'},{id:'PF-7',top:'8.4%',left:'88.1%'},{id:'PF-8',top:'21.7%',left:'97.3%'},{id:'PARK-1',top:'26.3%',left:'13.4%'},{id:'PARK-2',top:'26.3%',left:'25.0%'},{id:'PARK-3',top:'26.1%',left:'36.4%'},{id:'PARK-4',top:'26.5%',left:'49.2%'},{id:'PARK-5',top:'26.3%',left:'61.4%'},{id:'PARK-6',top:'26.3%',left:'73.4%'},{id:'PARK-7',top:'26.5%',left:'85.6%'},{id:'AF-2',top:'72.6%',left:'97.4%'},{id:'AF-3',top:'92.7%',left:'96.1%'},{id:'AF-4',top:'92.5%',left:'74.8%'},{id:'AF-5',top:'92.3%',left:'61.3%'},{id:'AF-6',top:'92.5%',left:'40.9%'},{id:'AF-7',top:'92.5%',left:'26.0%'},{id:'AF-8',top:'92.5%',left:'6.1%'},{id:'AF-9',top:'71.7%',left:'5.0%'},{id:'ART-1',top:'44.5%',left:'72.3%'},{id:'ART-2',top:'73.4%',left:'85.8%'},{id:'ART-3',top:'73.4%',left:'73.9%'},{id:'ART-4',top:'73.4%',left:'61.6%'},{id:'ART-5',top:'73.8%',left:'49.8%'},{id:'ART-6',top:'73.8%',left:'37.0%'},{id:'ART-7',top:'73.6%',left:'25.2%'},{id:'ART-8',top:'73.4%',left:'13.7%'}],
+    '28~31층': [{id:'PF-1',top:'38.4%',left:'4.5%'},{id:'PF-2',top:'8.6%',left:'4.8%'},{id:'PF-3',top:'8.6%',left:'27.3%'},{id:'PF-4',top:'8.8%',left:'42.3%'},{id:'PF-5',top:'8.8%',left:'56.8%'},{id:'PF-6',top:'8.6%',left:'74.3%'},{id:'PF-7',top:'10.0%',left:'88.4%'},{id:'PF-8',top:'20.7%',left:'97.3%'},{id:'PARK-1',top:'26.2%',left:'13.1%'},{id:'PARK-2',top:'26.5%',left:'24.4%'},{id:'PARK-3',top:'26.6%',left:'36.6%'},{id:'PARK-4',top:'26.5%',left:'49.2%'},{id:'PARK-5',top:'26.3%',left:'61.0%'},{id:'PARK-6',top:'26.3%',left:'73.2%'},{id:'PARK-7',top:'26.3%',left:'85.1%'},{id:'AF-1',top:'45.0%',left:'97.7%'},{id:'AF-2',top:'72.6%',left:'97.8%'},{id:'AF-3',top:'92.7%',left:'96.2%'},{id:'AF-4',top:'92.5%',left:'75.1%'},{id:'AF-5',top:'92.5%',left:'61.1%'},{id:'AF-6',top:'92.5%',left:'41.0%'},{id:'AF-7',top:'92.7%',left:'26.0%'},{id:'AF-8',top:'92.7%',left:'6.3%'},{id:'AF-9',top:'71.6%',left:'4.9%'},{id:'ART-1',top:'50.1%',left:'85.7%'},{id:'ART-2',top:'73.4%',left:'86.1%'},{id:'ART-3',top:'73.6%',left:'74.4%'},{id:'ART-4',top:'73.6%',left:'62.1%'},{id:'ART-5',top:'73.6%',left:'49.9%'},{id:'ART-6',top:'73.8%',left:'37.7%'},{id:'ART-7',top:'73.8%',left:'25.5%'},{id:'ART-8',top:'73.9%',left:'14.2%'}],
+    '32층': [{id:'A1',top:'32.2%',left:'42.5%'},{id:'A2',top:'32.2%',left:'31.5%'},{id:'A3',top:'32.2%',left:'20.4%'},{id:'A4',top:'30.2%',left:'10.1%'},{id:'A5',top:'19.6%',left:'12.7%'},{id:'A6',top:'19.8%',left:'24.5%'},{id:'A7',top:'19.6%',left:'37.9%'},{id:'B1',top:'32.1%',left:'57.7%'},{id:'B2',top:'32.1%',left:'68.7%'},{id:'B3',top:'32.2%',left:'79.6%'},{id:'B4',top:'32.2%',left:'90.5%'},{id:'B5',top:'19.6%',left:'87.8%'},{id:'B6',top:'19.4%',left:'75.7%'},{id:'B7',top:'19.8%',left:'63.8%'},{id:'SEMINAR_D',top:'52.8%',left:'85.7%'},{id:'CONFERENCE ROOM',top:'79.3%',left:'82.0%'},{id:'SEMINAR_C',top:'79.1%',left:'62.6%'},{id:'SEMINAR_B',top:'79.6%',left:'42.8%'},{id:'SEMINAR_A',top:'79.4%',left:'17.9%'}],
+    '33층': [{id:'PF-1',top:'42.8%',left:'5.2%'},{id:'PF-2',top:'8.6%',left:'5.1%'},{id:'PF-3',top:'8.6%',left:'27.3%'},{id:'PF-4',top:'8.6%',left:'42.7%'},{id:'PF-5',top:'8.8%',left:'57.2%'},{id:'PF-6',top:'8.9%',left:'74.6%'},{id:'PF-7',top:'8.6%',left:'87.0%'},{id:'PF-8',top:'26.5%',left:'13.4%'},{id:'PARK-1',top:'26.5%',left:'24.4%'},{id:'PARK-2',top:'26.5%',left:'36.4%'},{id:'PARK-3',top:'26.5%',left:'36.9%'},{id:'PARK-4',top:'26.5%',left:'48.9%'},{id:'PARK-5',top:'26.5%',left:'61.0%'},{id:'PARK-6',top:'26.3%',left:'48.9%'},{id:'PARK-7',top:'26.5%',left:'85.8%'},{id:'AF-1',top:'45.0%',left:'97.8%'},{id:'AF-2',top:'72.4%',left:'97.8%'},{id:'AF-3',top:'92.7%',left:'96.6%'},{id:'AF-4',top:'92.5%',left:'75.2%'},{id:'AF-5',top:'92.5%',left:'61.4%'},{id:'AF-6',top:'92.5%',left:'41.0%'},{id:'AF-7',top:'92.5%',left:'26.2%'},{id:'AF-8',top:'92.5%',left:'6.2%'},{id:'AF-9',top:'71.4%',left:'4.5%'},{id:'ART-1',top:'50.1%',left:'85.8%'},{id:'ART-2',top:'73.4%',left:'85.8%'},{id:'ART-3',top:'73.4%',left:'74.0%'},{id:'ART-4',top:'73.4%',left:'61.7%'},{id:'ART-5',top:'73.4%',left:'49.6%'},{id:'ART-6',top:'73.8%',left:'37.2%'},{id:'ART-7',top:'73.8%',left:'25.5%'},{id:'ART-8',top:'73.8%',left:'13.9%'}],
+    '34~40층': [{id:'PARK-1',top:'50.5%',left:'18.7%'},{id:'PARK-2',top:'28.0%',left:'16.6%'},{id:'PARK-3',top:'28.3%',left:'26.9%'},{id:'PARK-4',top:'28.1%',left:'38.1%'},{id:'PARK-5',top:'28.1%',left:'50.3%'},{id:'PARK-6',top:'28.1%',left:'61.6%'},{id:'PARK-7',top:'28.1%',left:'73.9%'},{id:'PARK-8',top:'28.0%',left:'84.2%'},{id:'PF-1',top:'37.5%',left:'6.0%'},{id:'PF-2',top:'11.2%',left:'5.7%'},{id:'PF-3',top:'11.1%',left:'27.0%'},{id:'PF-4',top:'10.9%',left:'40.8%'},{id:'PF-5',top:'11.1%',left:'56.8%'},{id:'PF-6',top:'11.2%',left:'69.9%'},{id:'PF-7',top:'11.2%',left:'84.3%'},{id:'PF-8',top:'22.3%',left:'95.3%'},{id:'ART-1',top:'50.7%',left:'84.0%'},{id:'ART-2',top:'72.3%',left:'84.4%'},{id:'ART-3',top:'72.2%',left:'73.2%'},{id:'ART-4',top:'72.3%',left:'61.6%'},{id:'ART-5',top:'72.2%',left:'49.7%'},{id:'ART-6',top:'72.3%',left:'38.1%'},{id:'ART-7',top:'72.3%',left:'26.8%'},{id:'ART-8',top:'72.2%',left:'16.1%'},{id:'AF-1',top:'47.1%',left:'95.4%'},{id:'AF-2',top:'72.2%',left:'95.3%'},{id:'AF-3',top:'89.9%',left:'92.3%'},{id:'AF-4',top:'90.2%',left:'72.3%'},{id:'AF-5',top:'90.4%',left:'57.6%'},{id:'AF-6',top:'90.2%',left:'39.3%'},{id:'AF-7',top:'90.4%',left:'25.4%'},{id:'AF-8',top:'90.2%',left:'5.6%'},{id:'AF-9',top:'70.6%',left:'6.0%'}]
+  };
+
+  let selectedFloorGroup = '';
+  let selectedSpecificFloor = '';
+  let selectedZones = [];
+
+  function initFloorGroupBtns() {
+    const wrap = document.getElementById('floorGroupBtns');
+    wrap.innerHTML = FLOOR_GROUPS.map(g => `
+      <button onclick="selectFloorGroup('${g}')"
+        id="fg_${g.replace(/[~, ]/g,'_')}"
+        style="padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--nm-border);background:transparent;color:var(--nm-muted);transition:all 0.2s;"
+        onmouseover="if(this.dataset.active!='1')this.style.background='rgba(255,255,255,0.05)'"
+        onmouseout="if(this.dataset.active!='1')this.style.background='transparent'"
+      >${g}</button>`).join('');
+  }
+
+  function selectFloorGroup(group) {
+    selectedFloorGroup = group;
+    selectedSpecificFloor = SPECIFIC_FLOORS[group][0];
+    selectedZones = [];
+
+    // 버튼 스타일 업데이트
+    FLOOR_GROUPS.forEach(g => {
+      const btn = document.getElementById('fg_' + g.replace(/[~, ]/g,'_'));
+      if (!btn) return;
+      if (g === group) {
+        btn.style.background = 'rgba(255,255,255,0.95)';
+        btn.style.color = '#0A0A0F';
+        btn.style.borderColor = 'rgba(255,255,255,0.9)';
+        btn.dataset.active = '1';
+      } else {
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--nm-muted)';
+        btn.style.borderColor = 'var(--nm-border)';
+        btn.dataset.active = '0';
+      }
+    });
+
+    // 상세 층수 표시
+    const specWrap = document.getElementById('specificFloorWrap');
+    const specBtns = document.getElementById('specificFloorBtns');
+    const floors = SPECIFIC_FLOORS[group];
+    if (floors.length > 1) {
+      specWrap.style.display = 'block';
+      specBtns.innerHTML = floors.map(f => `
+        <button onclick="selectSpecificFloor('${f}')" id="sf_${f}"
+          style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;border:1px solid rgba(59,130,246,0.3);background:transparent;color:#60A5FA;">
+          ${f}
+        </button>`).join('');
+      selectSpecificFloor(floors[0]);
+    } else {
+      specWrap.style.display = 'none';
+      loadFloorMap(group);
+    }
+  }
+
+  function selectSpecificFloor(floor) {
+    selectedSpecificFloor = floor;
+    selectedZones = [];
+    const allBtns = document.querySelectorAll('[id^="sf_"]');
+    allBtns.forEach(b => {
+      b.style.background = 'transparent';
+      b.style.color = '#60A5FA';
+    });
+    const btn = document.getElementById('sf_' + floor);
+    if (btn) { btn.style.background = '#3B82F6'; btn.style.color = 'white'; }
+    loadFloorMap(selectedFloorGroup);
+    updateMemoDisplay();
+  }
+
+  function loadFloorMap(group) {
+    const imgEl = document.getElementById('floorMapImg');
+    const placeholder = document.getElementById('floorMapPlaceholder');
+    const zonesEl = document.getElementById('floorMapZones');
+    const zoneBtnGroups = document.getElementById('zoneBtnGroups');
+
+    imgEl.style.opacity = '0';
+    placeholder.style.display = 'flex';
+
+    const imgSrc = FLOOR_IMAGES[group];
+    if (imgSrc) {
+      imgEl.onload = () => {
+        imgEl.style.opacity = '1';
+        placeholder.style.display = 'none';
+        renderZoneOverlays(group);
+      };
+      imgEl.onerror = () => { placeholder.style.display = 'flex'; };
+      imgEl.src = imgSrc;
+    }
+
+    // 구역 버튼 그룹 렌더링
+    const groups = ZONE_GROUPS[group] || ZONE_GROUPS['default'];
+    zoneBtnGroups.style.display = 'block';
+    const grid = document.getElementById('zoneGroupsGrid');
+    grid.innerHTML = groups.map(g => `
+      <div style="background:rgba(255,255,255,0.02);border:1px solid var(--nm-border);border-radius:10px;padding:12px;">
+        <div style="font-size:11px;font-weight:700;color:${g.color};margin-bottom:8px;">${g.title}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">
+          ${g.items.map(z => `
+            <button onclick="toggleZone('${z}')" id="zb_${z.replace(/ /g,'_')}"
+              style="padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;
+                     background:rgba(255,255,255,0.04);border:1px solid var(--nm-border);color:var(--nm-muted);">
+              ${z}
+            </button>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  function renderZoneOverlays(group) {
+    const zonesEl = document.getElementById('floorMapZones');
+    const zMap = ZONE_MAPS[group] || [];
+    zonesEl.innerHTML = zMap.map(z => `
+      <div onclick="toggleZone('${z.id}')" id="zo_${z.id.replace(/ /g,'_')}"
+        title="${z.id}"
+        style="position:absolute;top:${z.top};left:${z.left};width:5%;height:4%;
+               cursor:pointer;border:2px solid transparent;border-radius:6px;z-index:10;
+               display:flex;align-items:center;justify-content:center;
+               transform:translate(-50%,-50%);transition:all 0.2s;
+               background:transparent;">
+      </div>`).join('');
+  }
+
+  function toggleZone(zoneId) {
+    const idx = selectedZones.indexOf(zoneId);
+    if (idx > -1) selectedZones.splice(idx, 1);
+    else selectedZones.push(zoneId);
+    updateZoneVisuals();
+    updateMemoDisplay();
+  }
+
+  function updateZoneVisuals() {
+    // 도면 오버레이 업데이트
+    document.querySelectorAll('[id^="zo_"]').forEach(el => {
+      const zid = el.id.replace('zo_','').replace(/_/g,' ');
+      const zidUnderscore = el.id.replace('zo_','');
+      const actualId = selectedZones.find(z => z.replace(/ /g,'_') === zidUnderscore || z === zidUnderscore);
+      if (actualId) {
+        el.style.borderColor = '#E8002D';
+        el.style.background = 'rgba(232,0,45,0.25)';
+        el.style.boxShadow = '0 0 10px rgba(232,0,45,0.4)';
+        el.innerHTML = '<i class="fa-solid fa-circle-check" style="color:#FF4560;font-size:14px;"></i>';
+      } else {
+        el.style.borderColor = 'transparent';
+        el.style.background = 'transparent';
+        el.style.boxShadow = 'none';
+        el.innerHTML = '';
+      }
+    });
+
+    // 구역 버튼 업데이트
+    document.querySelectorAll('[id^="zb_"]').forEach(btn => {
+      const zidKey = btn.id.replace('zb_','');
+      const isSelected = selectedZones.some(z => z.replace(/ /g,'_') === zidKey || z === zidKey);
+      if (isSelected) {
+        btn.style.background = 'var(--nm-red)';
+        btn.style.color = 'white';
+        btn.style.borderColor = 'var(--nm-red)';
+      } else {
+        btn.style.background = 'rgba(255,255,255,0.04)';
+        btn.style.color = 'var(--nm-muted)';
+        btn.style.borderColor = 'var(--nm-border)';
+      }
+    });
+  }
+
+  function updateMemoDisplay() {
+    const floor = selectedSpecificFloor || selectedFloorGroup;
+    const zoneText = selectedZones.length ? selectedZones.join(', ') : '';
+    const fullLocation = floor ? `${floor}${zoneText ? ' (' + zoneText + ')' : ''}` : '';
+
+    const display = document.getElementById('selectedZoneDisplay');
+    const shortInput = document.getElementById('tempMemoShort');
+    if (fullLocation) {
+      display.style.display = 'block';
+      document.getElementById('selectedZoneText').textContent = fullLocation;
+      shortInput.value = fullLocation;
+    } else {
+      display.style.display = 'none';
+      shortInput.value = '';
+    }
+  }
+
+  // ─── Temperature ───
+  function selectTemp(type) {
+    selectedTempType = type;
+    document.getElementById('btnHot').classList.toggle('selected', type === 'hot');
+    document.getElementById('btnCold').classList.toggle('selected', type === 'cold');
+  }
+
+  async function submitTemperature() {
+    const name = document.getElementById('tempName').value.trim();
+    const location = document.getElementById('tempMemoShort').value.trim() || selectedFloorGroup;
+    const memo = document.getElementById('tempMemo').value.trim();
+
+    if (!selectedTempType) { showToast('error', '입력 오류', '덥다 / 춥다를 선택해주세요.'); return; }
+    if (!name) { showToast('error', '입력 오류', '신청자 이름을 입력해주세요.'); return; }
+    if (!location) { showToast('error', '입력 오류', '층수와 구역을 선택해주세요.'); return; }
+
+    const btn = document.getElementById('btnTempSubmit');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 접수 중...';
+
+    const typeLabel = selectedTempType === 'hot' ? '🥵 덥다' : '🥶 춥다';
+    const fullMemo = `${location} 자리가 온도 불편.\n구분: ${typeLabel}${memo ? '\n추가 메모: ' + memo : ''}`;
+
+    const data = {
+      category: 'temperature',
+      type: typeLabel,
+      name, floor: location, memo: fullMemo,
+      status: '접수완료',
+      createdAt: fbFunctions ? fbFunctions.serverTimestamp() : new Date().toISOString()
+    };
+
+    const saved = await saveToFirebase('complaints', data);
+    if (saved) {
+      showToast('success', '온도 민원 접수 완료', `${location} ${typeLabel} 민원이 접수되었습니다.`);
+      // 초기화
+      document.getElementById('tempName').value = '';
+      document.getElementById('tempMemo').value = '';
+      selectedTempType = ''; selectedZones = []; selectedFloorGroup = ''; selectedSpecificFloor = '';
+      document.getElementById('btnHot').classList.remove('selected');
+      document.getElementById('btnCold').classList.remove('selected');
+      document.getElementById('selectedZoneDisplay').style.display = 'none';
+      document.getElementById('tempMemoShort').value = '';
+      initFloorGroupBtns();
+      document.getElementById('floorMapZones').innerHTML = '';
+      document.getElementById('floorMapImg').style.opacity = '0';
+      document.getElementById('floorMapPlaceholder').style.display = 'flex';
+      document.getElementById('zoneBtnGroups').style.display = 'none';
+      setTimeout(() => goTo('dashboard'), 1500);
+    } else {
+      showToast('error', '접수 실패', 'Firebase 설정을 확인해주세요.');
+    }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 민원 접수';
+  }
+
+  // ─── Lost & Found ───
+  function selectLF(type) {
+    selectedLFType = type;
+    document.getElementById('btnLost').classList.toggle('selected', type === 'lost');
+    document.getElementById('btnFound').classList.toggle('selected', type === 'found');
+  }
+
+  async function submitLostFound() {
+    const floor = document.getElementById('lfFloor').value;
+    const item = document.getElementById('lfItem').value.trim();
+    const memo = document.getElementById('lfMemo').value.trim();
+    if (!selectedLFType) { showToast('error', '입력 오류', '분실 또는 습득을 선택해주세요.'); return; }
+    if (!floor) { showToast('error', '입력 오류', '위치를 선택해주세요.'); return; }
+    if (!item) { showToast('error', '입력 오류', '물품 종류를 입력해주세요.'); return; }
+
+    const btn = document.getElementById('btnLFSubmit');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 접수 중...';
+
+    const data = {
+      category: 'lostfound',
+      type: selectedLFType === 'lost' ? '분실' : '습득',
+      floor, item, memo,
+      createdAt: fbFunctions ? fbFunctions.serverTimestamp() : new Date().toISOString()
+    };
+
+    const saved = await saveToFirebase('complaints', data);
+    if (saved) {
+      showToast('success', '분실물 접수 완료', `${floor} ${item} ${selectedLFType === 'lost' ? '분실' : '습득'} 신고가 접수되었습니다.`);
+      document.getElementById('lfFloor').value = '';
+      document.getElementById('lfItem').value = '';
+      document.getElementById('lfMemo').value = '';
+      selectedLFType = '';
+      document.getElementById('btnLost').classList.remove('selected');
+      document.getElementById('btnFound').classList.remove('selected');
+      setTimeout(() => goTo('dashboard'), 1500);
+    } else {
+      showToast('error', '접수 실패', 'Firebase 설정을 확인해주세요.');
+    }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 신고 접수';
+  }
+
+  // ─── Facility ───
+  async function submitFacility() {
+    const name = document.getElementById('facilityName').value.trim();
+    const type = document.getElementById('facilityType').value;
+    const location = document.getElementById('facilityLocation').value.trim();
+    const summary = document.getElementById('facilitySummary').value.trim();
+    const detail = document.getElementById('facilityDetail').value.trim();
+    const due = document.getElementById('facilityDue').value;
+
+    if (!name || !summary || !detail) { showToast('error', '입력 오류', '이름, 요약, 상세내용을 입력해주세요.'); return; }
+
+    const btn = document.getElementById('btnFacilitySubmit');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 등록 중...';
+
+    const data = { category: 'facility', name, type, location, summary, detail, due,
+      status: '접수완료', createdAt: fbFunctions ? fbFunctions.serverTimestamp() : new Date().toISOString() };
+
+    const saved = await saveToFirebase('complaints', data);
+    if (saved) {
+      showToast('success', '건의사항 접수 완료', '시설물/불편사항이 정상 접수되었습니다.');
+      ['facilityName','facilityLocation','facilitySummary','facilityDetail','facilityDue'].forEach(id => document.getElementById(id).value = '');
+      setTimeout(() => goTo('dashboard'), 1500);
+    } else {
+      showToast('error', '접수 실패', 'Firebase 설정을 확인해주세요.');
+    }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 등록하기';
+  }
+
+  // ─── Equipment ───
+  async function submitEquipment() {
+    const name = document.getElementById('equipName').value.trim();
+    const type = document.getElementById('equipType').value;
+    const device = document.getElementById('equipDevice').value;
+    const summary = document.getElementById('equipSummary').value.trim();
+    const detail = document.getElementById('equipDetail').value.trim();
+    const due = document.getElementById('equipDue').value;
+
+    if (!name || !summary || !detail) { showToast('error', '입력 오류', '이름, 요약, 상세내용을 입력해주세요.'); return; }
+
+    const btn = document.getElementById('btnEquipSubmit');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 등록 중...';
+
+    const data = { category: 'equipment', name, type, device, summary, detail, due,
+      status: '접수완료', createdAt: fbFunctions ? fbFunctions.serverTimestamp() : new Date().toISOString() };
+
+    const saved = await saveToFirebase('complaints', data);
+    if (saved) {
+      showToast('success', '장비 요청 접수 완료', '장비/IT 지원 요청이 정상 접수되었습니다.');
+      ['equipName','equipSummary','equipDetail','equipDue'].forEach(id => document.getElementById(id).value = '');
+      setTimeout(() => goTo('dashboard'), 1500);
+    } else {
+      showToast('error', '접수 실패', 'Firebase 설정을 확인해주세요.');
+    }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 등록하기';
+  }
+
+  // ─── Firebase Helpers ───
+  async function saveToFirebase(collectionName, data) {
+    if (!db || !fbFunctions) return false;
+    try {
+      await fbFunctions.addDoc(fbFunctions.collection(db, collectionName), data);
+      return true;
+    } catch (e) { console.error('Firebase save error:', e); return false; }
+  }
+
+  async function loadDashboardData() {
+    if (!db || !fbFunctions) return;
+    try {
+      const q = fbFunctions.query(fbFunctions.collection(db, 'complaints'), fbFunctions.orderBy('createdAt', 'desc'), fbFunctions.limit(50));
+      const snap = await fbFunctions.getDocs(q);
+      const counts = { temperature: 0, lostfound: 0, equipment: 0, facility: 0 };
+      let total = 0;
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (counts[d.category] !== undefined) counts[d.category]++;
+        if (d.status === '접수완료') total++;
+      });
+      statsData = counts;
+      document.getElementById('statReceived').textContent = total;
+      document.getElementById('statCompleted').textContent = snap.size - total;
+      renderCategoryStats();
+    } catch (e) { console.warn('Could not load data:', e); }
+  }
+
+  function subscribeToRecent() {
+    if (!db || !fbFunctions) return;
+    try {
+      const q = fbFunctions.query(fbFunctions.collection(db, 'complaints'), fbFunctions.orderBy('createdAt', 'desc'), fbFunctions.limit(10));
+      fbFunctions.onSnapshot(q, (snap) => {
+        const items = [];
+        snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+        renderFeed(items);
+        updateMarquee(items);
+        updateStats(items);
+      });
+    } catch (e) { console.warn('Subscription failed:', e); }
+  }
+
+  function renderFeed(items) {
+    const feed = document.getElementById('recentFeed');
+    if (!items.length) {
+      feed.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox" style="display:block;"></i><p>아직 접수된 내역이 없습니다</p></div>';
+      return;
+    }
+    const colorMap = { temperature: '#FF4560', lostfound: '#A78BFA', equipment: '#60A5FA', facility: '#34D399' };
+    const labelMap = { temperature: '온도 민원', lostfound: '분실물', equipment: '장비 요청', facility: '시설물' };
+    feed.innerHTML = items.slice(0, 6).map(item => {
+      const ts = item.createdAt?.toDate ? item.createdAt.toDate() : new Date();
+      const timeStr = ts.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      return `<div class="feed-item">
+        <div class="feed-dot" style="background:${colorMap[item.category] || '#888'};"></div>
+        <div class="feed-content">
+          <div class="feed-title">${item.name || '익명'} · ${labelMap[item.category] || item.category}</div>
+          <div class="feed-meta">${item.type || item.summary || ''} ${item.floor || ''}</div>
+        </div>
+        <div class="feed-time">${timeStr}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function updateMarquee(items) {
+    if (!items.length) return;
+    const typeMap = { '🥵 덥다': 'hot', '🥶 춥다': 'cold', '분실': 'lost', '습득': 'lost' };
+    const inner = document.getElementById('marqueeInner');
+    const html = [...items, ...items].map(item => {
+      const badgeClass = typeMap[item.type] || 'cold';
+      return `<span class="marquee-item">
+        ${item.name || '임직원'} 
+        <span class="marquee-badge ${badgeClass}">${item.type || item.category}</span>
+        ${item.floor || item.location || ''}
+      </span>`;
+    }).join('');
+    inner.innerHTML = html;
+  }
+
+  function updateStats(items) {
+    const counts = { temperature: 0, lostfound: 0, equipment: 0, facility: 0 };
+    items.forEach(i => { if (counts[i.category] !== undefined) counts[i.category]++; });
+    statsData = counts;
+    renderCategoryStats();
+  }
+
+  function renderCategoryStats() {
+    const max = Math.max(...Object.values(statsData), 1);
+    document.querySelectorAll('.category-bar').forEach(bar => {
+      const key = bar.dataset.key;
+      const label = bar.dataset.label;
+      const color = bar.dataset.color;
+      const val = statsData[key] || 0;
+      const pct = Math.round((val / max) * 100);
+      bar.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:12px;color:var(--nm-muted);">${label}</span>
+          <span style="font-size:13px;font-weight:700;color:${color};">${val}건</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.6s ease;"></div>
+        </div>`;
+    });
+  }
+
+  async function loadParcels() {
+    if (!db || !fbFunctions) {
+      document.getElementById('parcelGrid').innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <i class="fa-solid fa-database" style="display:block;"></i>
+          <p>Firebase 연결이 필요합니다</p>
+          <p style="font-size:11px;margin-top:6px;">또는 <a href="https://script.google.com/a/macros/netmarble.com/s/AKfycbw_vV-a8NqwoSZDv4bIAktrlC2ES6oJB4rzBp9NQqAFUC42aJ8mnxWeUnZXoubGdk7E/exec" target="_blank" style="color:#60A5FA;">Google Apps Script 포탈</a>에서 확인하세요</p>
+        </div>`;
+      return;
+    }
+    try {
+      const q = fbFunctions.query(fbFunctions.collection(db, 'parcels'), fbFunctions.orderBy('createdAt', 'desc'));
+      const snap = await fbFunctions.getDocs(q);
+      allParcels = [];
+      snap.forEach(doc => allParcels.push({ id: doc.id, ...doc.data() }));
+      renderParcels(allParcels);
+    } catch (e) {
+      document.getElementById('parcelGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-circle-exclamation" style="display:block;"></i><p>데이터 로드 실패</p></div>';
+    }
+  }
+
+  function renderParcels(parcels) {
+    const grid = document.getElementById('parcelGrid');
+    if (!parcels.length) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-box-open" style="display:block;"></i><p>보관 중인 택배가 없습니다</p></div>';
+      return;
+    }
+    const maskName = n => { if (!n) return ''; if (n.length <= 1) return n; if (n.length === 2) return n[0] + '*'; return n[0] + '*'.repeat(n.length - 2) + n[n.length - 1]; };
+    grid.innerHTML = parcels.map(p => `
+      <div class="parcel-card">
+        <div class="parcel-date">${p.date || '날짜 미상'} 보관중</div>
+        <div class="parcel-courier">${p.courier || '택배'}</div>
+        <div class="parcel-person"><i class="fa-solid fa-user" style="color:var(--nm-muted);font-size:11px;"></i>${maskName(p.name)} <span style="color:var(--nm-border);margin:0 4px;">|</span> ${p.dept || ''}</div>
+      </div>`).join('');
+  }
+
+  function filterParcel(date, btn) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    const filtered = date === '전체' ? allParcels : allParcels.filter(p => p.date === date);
+    renderParcels(filtered);
+  }
+
+  // ─── Toast ───
+  function showToast(type, title, msg) {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toastIcon');
+    toast.className = `toast ${type}`;
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMsg').textContent = msg;
+    icon.className = type === 'success' ? 'fa-solid fa-check' : 'fa-solid fa-xmark';
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  // ─── Weather ───
+  async function fetchWeather() {
+    try {
+      const r = await fetch('https://wttr.in/Guro+Seoul?format=j1');
+      const j = await r.json();
+      const c = j.current_condition[0];
+      document.getElementById('statWeather').textContent = c.temp_C;
+      document.getElementById('statWeatherDesc').textContent = `°C · ${c.weatherDesc[0].value}`;
+    } catch (e) {
+      document.getElementById('statWeather').textContent = '--';
+    }
+  }
+
+  function refreshDashboard() { loadDashboardData(); fetchWeather(); }
+
+  // ─── Admin Data ───
+  let allAdminData = [];
+  let filteredAdminData = [];
+  let adminCurrentPage = 1;
+  const ADMIN_PAGE_SIZE = 15;
+  let adminSortKey = 'createdAt';
+  let adminSortAsc = false;
+
+  const CAT_LABELS = {
+    temperature: '🌡️ 온도 민원',
+    lostfound: '🔍 분실물',
+    equipment: '💻 장비 요청',
+    facility: '🔧 시설물 건의'
+  };
+
+  async function loadAdminData() {
+    if (!db || !fbFunctions) {
+      document.getElementById('adminTableBody').innerHTML = `
+        <tr><td colspan="7" style="text-align:center;padding:48px;color:var(--nm-muted);">
+          <i class="fa-solid fa-database" style="font-size:24px;display:block;margin-bottom:10px;opacity:0.4;"></i>
+          Firebase가 연결되지 않았습니다.<br>
+          <span style="font-size:11px;">상단의 firebaseConfig를 설정해주세요.</span>
+        </td></tr>`;
+      return;
+    }
+
+    document.getElementById('adminTableBody').innerHTML = `
+      <tr><td colspan="7" style="text-align:center;padding:48px;color:var(--nm-muted);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:20px;display:block;margin-bottom:12px;"></i>
+        데이터를 불러오는 중...
+      </td></tr>`;
+
+    try {
+      const q = fbFunctions.query(
+        fbFunctions.collection(db, 'complaints'),
+        fbFunctions.orderBy('createdAt', 'desc'),
+        fbFunctions.limit(500)
+      );
+      const snap = await fbFunctions.getDocs(q);
+      allAdminData = [];
+      snap.forEach(doc => allAdminData.push({ _id: doc.id, ...doc.data() }));
+
+      // 통계 업데이트
+      const counts = { temperature: 0, lostfound: 0, equipment: 0, facility: 0 };
+      allAdminData.forEach(d => { if (counts[d.category] !== undefined) counts[d.category]++; });
+      document.getElementById('aStatAll').textContent = allAdminData.length;
+      document.getElementById('aStatTemp').textContent = counts.temperature;
+      document.getElementById('aStatLF').textContent = counts.lostfound;
+      document.getElementById('aStatEquip').textContent = counts.equipment;
+      document.getElementById('aStatFacility').textContent = counts.facility;
+
+      applyAdminFilter();
+    } catch (e) {
+      console.error(e);
+      document.getElementById('adminTableBody').innerHTML = `
+        <tr><td colspan="7" style="text-align:center;padding:32px;color:#FF4560;">
+          데이터 로드 실패: ${e.message}
+        </td></tr>`;
+    }
+  }
+
+  function applyAdminFilter() {
+    const search = (document.getElementById('adminSearch')?.value || '').toLowerCase();
+    const cat = document.getElementById('adminCatFilter')?.value || '';
+    const status = document.getElementById('adminStatusFilter')?.value || '';
+    const dateRange = document.getElementById('adminDateFilter')?.value || '';
+
+    const now = new Date();
+    filteredAdminData = allAdminData.filter(d => {
+      if (cat && d.category !== cat) return false;
+      if (status && d.status !== status) return false;
+      if (search) {
+        const hay = [d.name, d.type, d.floor, d.summary, d.memo, d.detail, d.item, d.location].join(' ').toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      if (dateRange) {
+        const ts = d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+        const diffDays = (now - ts) / (1000 * 60 * 60 * 24);
+        if (dateRange === 'today' && diffDays > 1) return false;
+        if (dateRange === 'week' && diffDays > 7) return false;
+        if (dateRange === 'month' && diffDays > 30) return false;
+      }
+      return true;
+    });
+
+    // 정렬
+    filteredAdminData.sort((a, b) => {
+      let va = a[adminSortKey], vb = b[adminSortKey];
+      if (adminSortKey === 'createdAt') {
+        va = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+        vb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      }
+      if (va < vb) return adminSortAsc ? -1 : 1;
+      if (va > vb) return adminSortAsc ? 1 : -1;
+      return 0;
+    });
+
+    adminCurrentPage = 1;
+    document.getElementById('adminResultCount').textContent = `총 ${filteredAdminData.length}건`;
+    renderAdminTable();
+  }
+
+  function sortAdmin(key) {
+    if (adminSortKey === key) adminSortAsc = !adminSortAsc;
+    else { adminSortKey = key; adminSortAsc = false; }
+    applyAdminFilter();
+  }
+
+  function renderAdminTable() {
+    const start = (adminCurrentPage - 1) * ADMIN_PAGE_SIZE;
+    const pageData = filteredAdminData.slice(start, start + ADMIN_PAGE_SIZE);
+    const tbody = document.getElementById('adminTableBody');
+
+    if (!pageData.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--nm-muted);">
+        <i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:10px;opacity:0.4;"></i>
+        조건에 맞는 데이터가 없습니다.
+      </td></tr>`;
+      document.getElementById('adminPagination').style.display = 'none';
+      return;
+    }
+
+    tbody.innerHTML = pageData.map(d => {
+      const ts = d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.createdAt || 0);
+      const dateStr = ts.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+      const timeStr = ts.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      const catClass = `cat-${d.category}`;
+      const catLabel = CAT_LABELS[d.category] || d.category;
+      const statusClass = `status-${d.status || '접수완료'}`;
+      const summary = d.summary || d.type || d.item || d.memo?.slice(0, 30) || '—';
+      const location = d.floor || d.location || '—';
+      const status = d.status || '접수완료';
+
+      return `<tr>
+        <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--nm-muted);">${dateStr}<br>${timeStr}</td>
+        <td><span class="cat-badge ${catClass}">${catLabel}</span></td>
+        <td style="color:var(--nm-muted);font-size:12px;">${d.type || '—'}</td>
+        <td style="font-weight:600;">${d.name || '—'}</td>
+        <td style="font-size:12px;color:var(--nm-muted);">${location}</td>
+        <td style="font-size:12px;" title="${d.detail || d.memo || ''}">${summary}</td>
+        <td>
+          <select class="status-select ${statusClass}" onchange="updateStatus('${d._id}', this.value, this)">
+            <option value="접수완료" ${status==='접수완료'?'selected':''}>접수완료</option>
+            <option value="처리중" ${status==='처리중'?'selected':''}>처리중</option>
+            <option value="완료" ${status==='완료'?'selected':''}>완료</option>
+          </select>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // 페이지네이션
+    const totalPages = Math.ceil(filteredAdminData.length / ADMIN_PAGE_SIZE);
+    const pagEl = document.getElementById('adminPagination');
+    pagEl.style.display = 'flex';
+    document.getElementById('paginationInfo').textContent =
+      `${start + 1}–${Math.min(start + ADMIN_PAGE_SIZE, filteredAdminData.length)} / ${filteredAdminData.length}건`;
+
+    const btns = document.getElementById('paginationBtns');
+    let btnHTML = `<button class="page-btn" onclick="adminChangePage(${adminCurrentPage - 1})" ${adminCurrentPage===1?'disabled':''}>
+      <i class="fa-solid fa-chevron-left" style="font-size:10px;"></i></button>`;
+    const pageWindow = 5;
+    let startPage = Math.max(1, adminCurrentPage - Math.floor(pageWindow/2));
+    let endPage = Math.min(totalPages, startPage + pageWindow - 1);
+    if (endPage - startPage < pageWindow - 1) startPage = Math.max(1, endPage - pageWindow + 1);
+    for (let p = startPage; p <= endPage; p++) {
+      btnHTML += `<button class="page-btn ${p===adminCurrentPage?'active':''}" onclick="adminChangePage(${p})">${p}</button>`;
+    }
+    btnHTML += `<button class="page-btn" onclick="adminChangePage(${adminCurrentPage + 1})" ${adminCurrentPage===totalPages?'disabled':''}>
+      <i class="fa-solid fa-chevron-right" style="font-size:10px;"></i></button>`;
+    btns.innerHTML = btnHTML;
+  }
+
+  function adminChangePage(p) {
+    const totalPages = Math.ceil(filteredAdminData.length / ADMIN_PAGE_SIZE);
+    if (p < 1 || p > totalPages) return;
+    adminCurrentPage = p;
+    renderAdminTable();
+    document.getElementById('page-admin').scrollTo(0, 0);
+  }
+
+  async function updateStatus(docId, newStatus, selectEl) {
+    if (!db || !fbFunctions) { showToast('error', '오류', 'Firebase 연결 필요'); return; }
+    const prevStatus = selectEl.dataset.prev || selectEl.value;
+    selectEl.dataset.prev = newStatus;
+    // 클래스 업데이트
+    selectEl.className = `status-select status-${newStatus}`;
+    try {
+      const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await updateDoc(doc(db, 'complaints', docId), { status: newStatus });
+      // 로컬 데이터도 업데이트
+      const item = allAdminData.find(d => d._id === docId);
+      if (item) item.status = newStatus;
+      showToast('success', '상태 변경 완료', `→ ${newStatus}`);
+    } catch (e) {
+      showToast('error', '변경 실패', e.message);
+      selectEl.className = `status-select status-${prevStatus}`;
+    }
+  }
+
+  // ─── Excel / CSV Export ───
+  function exportCSV() {
+    if (!filteredAdminData.length) { showToast('error', '오류', '내보낼 데이터가 없습니다.'); return; }
+    const headers = ['접수일시', '카테고리', '구분', '신청자', '위치/층수', '요약', '상세내용', '완료요청일', '상태'];
+    const rows = filteredAdminData.map(d => {
+      const ts = d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.createdAt || 0);
+      return [
+        ts.toLocaleString('ko-KR'),
+        CAT_LABELS[d.category] || d.category || '',
+        d.type || '',
+        d.name || '',
+        d.floor || d.location || '',
+        d.summary || d.item || d.type || '',
+        (d.detail || d.memo || '').replace(/\n/g, ' '),
+        d.due || '',
+        d.status || '접수완료'
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    });
+    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    downloadFile(csv, `총무포탈_접수내역_${todayStr()}.csv`, 'text/csv;charset=utf-8;');
+    showToast('success', 'CSV 다운로드', `${filteredAdminData.length}건 내보내기 완료`);
+  }
+
+  function exportExcel() {
+    if (!filteredAdminData.length) { showToast('error', '오류', '내보낼 데이터가 없습니다.'); return; }
+    const headers = ['접수일시', '카테고리', '구분', '신청자', '위치/층수', '요약', '상세내용', '완료요청일', '상태'];
+    const rows = filteredAdminData.map(d => {
+      const ts = d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.createdAt || 0);
+      return [
+        ts.toLocaleString('ko-KR'),
+        (CAT_LABELS[d.category] || d.category || '').replace(/[🌡️🔍💻🔧]/gu, '').trim(),
+        d.type || '',
+        d.name || '',
+        d.floor || d.location || '',
+        d.summary || d.item || d.type || '',
+        (d.detail || d.memo || '').replace(/\n/g, ' '),
+        d.due || '',
+        d.status || '접수완료'
+      ];
+    });
+
+    // HTML Table → .xls (Excel이 인식 가능한 방식)
+    const catColors = { '온도 민원': '#FFE4E6', '분실물': '#EDE9FE', '장비 요청': '#DBEAFE', '시설물 건의': '#D1FAE5' };
+    let tableHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="UTF-8">
+      <style>
+        body { font-family: 맑은 고딕, Arial; font-size: 11pt; }
+        th { background: #1E293B; color: white; font-weight: bold; padding: 8px 12px; text-align: center; border: 1px solid #334155; }
+        td { padding: 7px 10px; border: 1px solid #E2E8F0; vertical-align: middle; }
+        tr:nth-child(even) td { background: #F8FAFC; }
+        .h { background: #FEF3C7 !important; }
+        .done { background: #D1FAE5 !important; color: #065F46; font-weight: bold; }
+        .proc { background: #DBEAFE !important; color: #1E40AF; font-weight: bold; }
+        .recv { background: #FEF9C3 !important; color: #713F12; }
+      </style></head><body>
+      <h2 style="color:#1E293B;margin-bottom:8px;">넷마블 총무포탈 접수 내역</h2>
+      <p style="color:#64748B;font-size:10pt;margin-bottom:16px;">추출일시: ${new Date().toLocaleString('ko-KR')} | 총 ${filteredAdminData.length}건</p>
+      <table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+
+    rows.forEach((r, i) => {
+      const statusClass = r[8] === '완료' ? 'done' : r[8] === '처리중' ? 'proc' : 'recv';
+      tableHTML += `<tr>${r.map((cell, ci) =>
+        `<td${ci === 8 ? ` class="${statusClass}"` : ''}>${cell}</td>`
+      ).join('')}</tr>`;
+    });
+
+    tableHTML += `</tbody></table></body></html>`;
+    downloadFile(tableHTML, `총무포탈_접수내역_${todayStr()}.xls`, 'application/vnd.ms-excel;charset=UTF-8');
+    showToast('success', 'Excel 다운로드', `${filteredAdminData.length}건 내보내기 완료`);
+  }
+
+  function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // ─── Init ───
+  fetchWeather();
+  renderCategoryStats();
+  initFloorGroupBtns();
+</script>
 </body>
 </html>
